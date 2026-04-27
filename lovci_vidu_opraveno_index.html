@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lovci vidů</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#26344d,#0d111a 65%);color:white;min-height:100vh;text-align:center} .wrap{max-width:760px;margin:0 auto;padding:18px} h1{font-size:36px;margin:18px 0 8px;letter-spacing:.5px}.subtitle{opacity:.85;margin-bottom:24px}.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:20px;box-shadow:0 12px 35px rgba(0,0,0,.35)}button{border:0;border-radius:16px;padding:16px 20px;font-size:20px;font-weight:700;color:white;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.25)}.menuBtns{display:grid;gap:14px;max-width:360px;margin:0 auto}.primary{background:#2563eb}.secondary{background:#7c3aed}.answerBtns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}.ned{background:#0ea5e9}.dok{background:#f97316}.sentence{font-size:28px;line-height:1.45;margin:22px 0;min-height:120px;display:flex;align-items:center;justify-content:center}.sentence b{color:#facc15;text-decoration:underline;text-underline-offset:5px;margin:0 .18em;display:inline-block}.timerWarn{background:rgba(239,68,68,.35)!important;color:#fecaca!important}.topbar{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:18px;margin-bottom:12px}.pill{background:rgba(255,255,255,.12);padding:8px 12px;border-radius:999px}.result{font-size:32px;font-weight:900;min-height:45px;margin-top:18px}.goodText{color:#86efac}.badText{color:#fca5a5}.small{font-size:18px;opacity:.9}.hidden{display:none}.finish{font-size:38px;color:#facc15;font-weight:900;margin:22px 0}@media(max-width:560px){h1{font-size:32px}.sentence{font-size:25px;min-height:145px}.answerBtns{grid-template-columns:1fr}button{font-size:20px;padding:17px}.topbar{font-size:16px;flex-direction:column}.wrap{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="menu" class="card">
+    <h1>Lovci vidů</h1>
+    <div class="subtitle">Urči, zda je zvýrazněný slovesný tvar dokonavý, nebo nedokonavý.</div>
+    <div class="menuBtns">
+      <button class="primary" onclick="startGame('train')">TRÉNINK</button>
+      <button class="secondary" onclick="startGame('test')">NAOSTRO</button>
+    </div>
+  </div>
+
+  <div id="game" class="card hidden">
+    <div class="topbar">
+      <div class="pill" id="modeLabel"></div>
+      <div class="pill">Série správně: <b id="streak">0</b>/10</div>
+      <div class="pill hidden" id="timerBox">Čas: <b id="timer">12</b> s</div>
+    </div>
+    <div class="sentence" id="sentence"></div>
+    <div class="answerBtns" id="answerBtns">
+      <button class="ned" onclick="answer('N')">NEDOKONAVÝ</button>
+      <button class="dok" onclick="answer('D')">DOKONAVÝ</button>
+    </div>
+    <div class="result" id="result"></div>
+    <div class="small" id="hint"></div>
+    <button style="margin-top:18px;background:#334155" onclick="backToMenu()">ZPĚT DO MENU</button>
+  </div>
+</div>
+<script>
+const data = [
+{v:"Předseda komise <b>nepodepsal</b> závěrečný protokol.",a:"D"},
+{v:"Předseda komise <b>nepodepisoval</b> závěrečný protokol často.",a:"N"},
+{v:"Studenti si text <b>přečetli</b> až doma.",a:"D"},
+{v:"Studenti si text <b>četli</b> velmi pozorně.",a:"N"},
+{v:"Nikdo mu tehdy <b>neuvěřil</b>.",a:"D"},
+{v:"Nikdo mu tehdy <b>nevěřil</b>.",a:"N"},
+{v:"Ředitel školy <b>oznámil</b> změnu rozvrhu.",a:"D"},
+{v:"Ředitel školy změnu rozvrhu <b>oznamoval</b> opakovaně.",a:"N"},
+{v:"Všichni se nad odpovědí <b>zamysleli</b>.",a:"D"},
+{v:"Všichni se nad odpovědí dlouho <b>zamýšleli</b>.",a:"N"},
+{v:"Petr úkol <b>nedokončil</b> včas.",a:"D"},
+{v:"Petr úkol <b>nedokončoval</b> s velkou chutí.",a:"N"},
+{v:"Komise návrh <b>zamítla</b>.",a:"D"},
+{v:"Komise návrh dlouho <b>zamítala</b>.",a:"N"},
+{v:"Děti si pravidla hry <b>zapamatovaly</b>.",a:"D"},
+{v:"Děti si pravidla hry obtížně <b>pamatovaly</b>.",a:"N"},
+{v:"Učitel žákům chybu <b>vysvětlil</b>.",a:"D"},
+{v:"Učitel žákům chybu trpělivě <b>vysvětloval</b>.",a:"N"},
+{v:"Nikdo se na schůzku <b>nedostavil</b>.",a:"D"},
+{v:"Nikdo se na schůzku pravidelně <b>nedostavoval</b>.",a:"N"},
+{v:"Auto náhle <b>zastavilo</b> u krajnice.",a:"D"},
+{v:"Auto u krajnice dlouho <b>zastavovalo</b>.",a:"N"},
+{v:"Kandidát otázku <b>zodpověděl</b> přesně.",a:"D"},
+{v:"Kandidát otázku neochotně <b>zodpovídal</b>.",a:"N"},
+{v:"Včera jsme se konečně <b>rozhodli</b>.",a:"D"},
+{v:"Celý týden jsme se těžko <b>rozhodovali</b>.",a:"N"},
+{v:"Žáci text <b>nepochopili</b> správně.",a:"D"},
+{v:"Žáci text při prvním čtení <b>nechápali</b>.",a:"N"},
+{v:"Hráč míč <b>odkopl</b> mimo hřiště.",a:"D"},
+{v:"Hráč míč opakovaně <b>odkopával</b> od branky.",a:"N"},
+{v:"Rodiče dítěti <b>zakázali</b> používání telefonu.",a:"D"},
+{v:"Rodiče dítěti telefon často <b>zakazovali</b>.",a:"N"},
+{v:"Turisté se v lese <b>ztratili</b>.",a:"D"},
+{v:"Turisté se v mapě stále <b>ztráceli</b>.",a:"N"},
+{v:"Básník v textu <b>vyjádřil</b> smutek.",a:"D"},
+{v:"Básník v textu smutek postupně <b>vyjadřoval</b>.",a:"N"},
+{v:"Soud důkaz <b>nepřijal</b>.",a:"D"},
+{v:"Soud podobné důkazy obvykle <b>nepřijímal</b>.",a:"N"},
+{v:"Dívka si rychle <b>oblékla</b> kabát.",a:"D"},
+{v:"Dívka si pomalu <b>oblékala</b> kabát.",a:"N"},
+{v:"Lékař pacienta <b>vyšetřil</b>.",a:"D"},
+{v:"Lékař pacienta dlouho <b>vyšetřoval</b>.",a:"N"},
+{v:"Účastníci soutěž <b>nevyhráli</b>.",a:"D"},
+{v:"Účastníci soutěž nikdy <b>nevyhrávali</b>.",a:"N"},
+{v:"Spisovatel román <b>dopsal</b> v emigraci.",a:"D"},
+{v:"Spisovatel román několik let <b>dopisoval</b>.",a:"N"},
+{v:"Chlapec si poznámku <b>zapsal</b> do sešitu.",a:"D"},
+{v:"Chlapec si poznámky pravidelně <b>zapisoval</b>.",a:"N"},
+{v:"Zpráva se rychle <b>rozšířila</b> mezi lidmi.",a:"D"},
+{v:"Zpráva se po městě dlouho <b>šířila</b>.",a:"N"},
+{v:"Vlak <b>přijel</b> s desetiminutovým zpožděním.",a:"D"},
+{v:"Vlak k nádraží pomalu <b>přijížděl</b>.",a:"N"},
+{v:"Student chybu <b>opravil</b>.",a:"D"},
+{v:"Student chybu v textu <b>opravoval</b> několik minut.",a:"N"},
+{v:"Nikdo se jeho slovům <b>nezasmál</b>.",a:"D"},
+{v:"Nikdo se jeho slovům během přednášky <b>nesmál</b>.",a:"N"},
+{v:"Dědeček nám příběh <b>dovyprávěl</b>.",a:"D"},
+{v:"Dědeček nám příběh dlouho <b>vyprávěl</b>.",a:"N"},
+{v:"Úředník dokument <b>ověřil</b> razítkem.",a:"D"},
+{v:"Úředník dokumenty každé ráno <b>ověřoval</b>.",a:"N"},
+{v:"Závodník soupeře <b>předběhl</b> v posledním kole.",a:"D"},
+{v:"Závodník soupeře postupně <b>předbíhal</b>.",a:"N"},
+{v:"Autor kapitolu <b>přepracoval</b>.",a:"D"},
+{v:"Autor kapitolu několik dní <b>přepracovával</b>.",a:"N"},
+{v:"Dítě se náhle <b>rozplakalo</b>.",a:"D"},
+{v:"Dítě v čekárně tiše <b>plakalo</b>.",a:"N"},
+{v:"Hosté se u stolu <b>posadili</b>.",a:"D"},
+{v:"Hosté u stolu klidně <b>seděli</b>.",a:"N"},
+{v:"Mluvčí svůj názor <b>zdůvodnil</b>.",a:"D"},
+{v:"Mluvčí svůj názor dlouze <b>zdůvodňoval</b>.",a:"N"},
+{v:"Hasiči požár <b>uhasili</b>.",a:"D"},
+{v:"Hasiči požár obtížně <b>hasili</b>.",a:"N"},
+{v:"Žák odpověď <b>neuhádl</b>.",a:"D"},
+{v:"Žák při zkoušení jen <b>hádal</b>.",a:"N"},
+{v:"Dívka dopis <b>odeslala</b> večer.",a:"D"},
+{v:"Dívka zprávy obvykle <b>odesílala</b> hned.",a:"N"},
+{v:"Řečník náhle <b>ztichl</b>.",a:"D"},
+{v:"Řečník během projevu často <b>tichl</b>.",a:"N"},
+{v:"Sousedé se kvůli hluku <b>pohádali</b>.",a:"D"},
+{v:"Sousedé se kvůli hluku často <b>hádali</b>.",a:"N"},
+{v:"Malíř obraz <b>nedokončil</b>.",a:"D"},
+{v:"Malíř obraz celé léto <b>dokončoval</b>.",a:"N"},
+{v:"Porota vítěze <b>vybrala</b>.",a:"D"},
+{v:"Porota vítěze dlouho <b>vybírala</b>.",a:"N"},
+{v:"Chlapec si ruce <b>umyl</b>.",a:"D"},
+{v:"Chlapec si ruce neochotně <b>mydlil</b>.",a:"N"},
+{v:"Cestující dveře <b>otevřel</b>.",a:"D"},
+{v:"Cestující dveře pomalu <b>otevíral</b>.",a:"N"},
+{v:"Nikdo odpověď <b>nenalezl</b>.",a:"D"},
+{v:"Nikdo odpověď v textu <b>nenacházel</b>.",a:"N"},
+{v:"Student pravidlo <b>použil</b> správně.",a:"D"},
+{v:"Student pravidlo při řešení často <b>používal</b>.",a:"N"},
+{v:"Pes kost <b>zahrabal</b> pod stromem.",a:"D"},
+{v:"Pes kost pod stromem dlouho <b>zahrabával</b>.",a:"N"},
+{v:"Děti se po zvonění <b>rozběhly</b> na hřiště.",a:"D"},
+{v:"Děti po hřišti radostně <b>běhaly</b>.",a:"N"},
+{v:"Vědec hypotézu <b>potvrdil</b> experimentem.",a:"D"},
+{v:"Vědec hypotézu postupně <b>potvrzoval</b>.",a:"N"},
+{v:"Nikdo si změny <b>nevšiml</b>.",a:"D"},
+{v:"Nikdo si změn dlouho <b>nevšímal</b>.",a:"N"}
+];
+let mode='train', current=null, streak=0, lastIndex=-1, locked=false;
+let timerValue=12, timerId=null, audioCtx=null;
+
+function ensureAudio(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+function tone(freq, duration=0.14, type='sine', volume=0.08, delay=0){
+  try{
+    ensureAudio();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq; g.gain.value=volume;
+    o.connect(g); g.connect(audioCtx.destination);
+    const t=audioCtx.currentTime+delay;
+    g.gain.setValueAtTime(volume,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+duration);
+    o.start(t); o.stop(t+duration);
+  }catch(e){}
+}
+function soundOK(){ tone(660,.10,'sine',.08,0); tone(880,.12,'sine',.08,.09); }
+function soundBad(){ tone(190,.20,'sawtooth',.07,0); tone(135,.22,'sawtooth',.06,.12); }
+function soundWin(){ [523,659,784,1046].forEach((f,i)=>tone(f,.16,'triangle',.09,i*.11)); }
+function soundTick(){ tone(520,.05,'square',.035,0); }
+
+function startGame(m){
+  ensureAudio();
+  mode=m;streak=0;locked=false;
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('modeLabel').textContent=m==='train'?'TRÉNINK':'NAOSTRO';
+  document.getElementById('streak').textContent=streak;
+  document.getElementById('timerBox').classList.toggle('hidden', m!=='test');
+  next();
+}
+function backToMenu(){
+  clearTimer();
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('menu').classList.remove('hidden');
+}
+function clearTimer(){ if(timerId){clearInterval(timerId); timerId=null;} }
+function startTimer(){
+  clearTimer();
+  const box=document.getElementById('timerBox'), timer=document.getElementById('timer');
+  if(mode!=='test'){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden'); box.classList.remove('timerWarn');
+  timerValue=12; timer.textContent=timerValue;
+  timerId=setInterval(()=>{
+    timerValue--; timer.textContent=timerValue;
+    if(timerValue<=5){ box.classList.add('timerWarn'); soundTick(); }
+    if(timerValue<=0){ clearTimer(); timeoutWrong(); }
+  },1000);
+}
+function next(){
+  clearTimer(); locked=false;
+  document.getElementById('result').textContent='';
+  document.getElementById('result').className='result';
+  document.getElementById('hint').textContent='';
+  let i;do{i=Math.floor(Math.random()*data.length)}while(data.length>1&&i===lastIndex);
+  lastIndex=i;current=data[i];
+  document.getElementById('sentence').innerHTML=current.v;
+  startTimer();
+}
+function label(a){return a==='D'?'DOKONAVÝ':'NEDOKONAVÝ'}
+function timeoutWrong(){
+  if(locked || mode!=='test') return;
+  locked=true; streak=0; document.getElementById('streak').textContent=streak;
+  const res=document.getElementById('result');
+  res.textContent='ČAS VYPRŠEL'; res.className='result badText';
+  soundBad();
+  setTimeout(next,950);
+}
+function answer(a){
+  if(locked)return;
+  ensureAudio(); clearTimer(); locked=true;
+  const res=document.getElementById('result');const hint=document.getElementById('hint');
+  if(a===current.a){
+    soundOK(); res.textContent='SPRÁVNĚ';res.className='result goodText';
+    if(mode==='test'){
+      streak++;document.getElementById('streak').textContent=streak;
+      if(streak>=10){
+        soundWin();
+        document.getElementById('sentence').innerHTML='<div class="finish">MÁŠ JEDNIČKU!</div>';
+        document.getElementById('result').textContent='10 správných odpovědí v řadě';
+        hint.textContent='Můžeš začít znovu přes tlačítko ZPĚT DO MENU.';
+        return;
+      }
+    }
+    setTimeout(next,850);
+  }else{
+    soundBad(); res.textContent='CHYBA';res.className='result badText';
+    if(mode==='train'){hint.textContent='Správně: '+label(current.a);}else{streak=0;document.getElementById('streak').textContent=streak;}
+    setTimeout(next,mode==='train'?1600:950);
+  }
+}
+</script>
+</body>
+</html>
